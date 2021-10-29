@@ -33,8 +33,12 @@ func (f *Flag) Args() []string {
 	return f.flagSet.Args()
 }
 
-func (f *Flag) Usage( fn func() ) {
+func (f *Flag) SetUsage( fn func() ) {
 	f.flagSet.Usage = fn
+}
+
+func (f *Flag) Usage() {
+	f.flagSet.Usage()
 }
 
 func (f *Flag) Parse(arguments []string) error {
