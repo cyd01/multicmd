@@ -25,6 +25,14 @@ func NewFlag( name string ) (*Flag) {
 	return f
 }
 
+func (f *Flag) Arg(i int) string {
+	return f.flagSet.Arg(i)
+}
+
+func (f *Flag) Args() []string {
+	return f.flagSet.Args()
+}
+
 func (f *Flag) Usage( fn func() ) {
 	f.flagSet.Usage = fn
 }
@@ -32,7 +40,6 @@ func (f *Flag) Usage( fn func() ) {
 func (f *Flag) Parse(arguments []string) error {
 	return f.flagSet.Parse(arguments)
 }
-
 
 func (f *Flag) Bool(name string, value bool, usage string) *bool {
 	val := value
