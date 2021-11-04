@@ -12,9 +12,15 @@ func forgevar( cmd, name string ) string {
 	return strings.ReplaceAll( strings.ToUpper(cmd+"_"+name), "-", "_" )
 }
 
+type ALIAS struct{
+	shortName   string
+	longName    string
+} 
+
 type Flag struct {
-	flagName string
-	flagSet *flag.FlagSet
+	flagName     string
+	flagSet      *flag.FlagSet
+	flagAliases  []ALIAS
 }
 
 func NewFlag( name string ) (*Flag) {
@@ -23,6 +29,20 @@ func NewFlag( name string ) (*Flag) {
 		flagSet: flag.NewFlagSet( name, flag.ContinueOnError),
 	}
 	return f
+}
+
+func (f *Flag) AliasByShort(name string) string {
+	for _, val := range f.flagAliases {
+		if val.shortName == name { return val.longName }
+	}
+	return ""
+}
+
+func (f *Flag) AliasByLong(name string) string {
+	for _, val := range f.flagAliases {
+		if val.longName == name { return val.shortName }
+	}
+	return ""
 }
 
 func (f *Flag) Arg(i int) string {
@@ -42,7 +62,8 @@ func (f *Flag) Usage() {
 }
 
 func (f *Flag) Parse(arguments []string) error {
-	return f.flagSet.Parse(arguments)
+	args := arguments
+	return f.flagSet.Parse(args)
 }
 
 func (f *Flag) Bool(name string, value bool, usage string) *bool {
@@ -65,6 +86,19 @@ func (f *Flag) Duration(name string, value time.Duration, usage string) *time.Du
 		}
 	}
 	return f.flagSet.Duration(name,val,usage)
+}
+
+func (f *Flag) IntP(longName, shortName string, value int, usage string) *int {
+	if len(shortName)>1 {
+		panic( f.flagName + " short name too long: " + shortName )
+	}
+	if len(shortName)==1 {
+		if len(f.AliasByShort(shortName)) >0 {
+			panic( f.flagName + " short flag redefined:" + shortName )
+		}
+		f.flagAliases = append( f.flagAliases, ALIAS{shortName: shortName, longName: longName} )
+	}
+	return f.Int(longName,value,usage)
 }
 
 func (f *Flag) Int(name string, value int, usage string) *int {
