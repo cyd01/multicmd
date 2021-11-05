@@ -88,6 +88,10 @@ func (f *Flag) addAlias(longName, shortName string) {
 	}
 }
 
+func (f *Flag) PrintDefaults() {
+	f.flagSet.PrintDefaults()
+}
+
 func (f *Flag) Bool(name string, value bool, usage string) *bool {
 	val := value
 	n := forgevar(f.flagName,name)
