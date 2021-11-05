@@ -30,7 +30,6 @@ func usage() {
 
 func Main(args []string) {
 	fmt.Println("in "+command)
-	f.SetUsage(usage)
 	f.Parse(args[1:])
 	
 	fmt.Println("Here is the value: "+*val1)

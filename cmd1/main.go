@@ -2,6 +2,7 @@ package cmd1
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	
 	"multicmd/flags"
@@ -20,8 +21,14 @@ var (
 	val2 = f.Int( "pos", 421, "Set position" )
 )
 
+func usage() {
+	fmt.Println("This is the usage of "+command)
+	os.Exit(0)
+}
+
 func Main(args []string) {
 	fmt.Println("in "+command)
+	f.SetUsage(usage)
 	f.Parse(args[1:])
 	
 	fmt.Println("Here is the value: "+*val1)

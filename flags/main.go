@@ -63,7 +63,29 @@ func (f *Flag) Usage() {
 
 func (f *Flag) Parse(arguments []string) error {
 	args := arguments
+	if len(args)>0 {
+		for i:=0; i<len(args) ;i++ {
+			if strings.HasPrefix(args[i],"-") {
+				var v string
+				if strings.HasPrefix(args[i],"--") { v=args[i][2:] } else { v=args[i][1:] }
+				n := f.AliasByShort(v)
+				if len(n)>0 { args[i] = "-"+n }
+			}
+		}
+	}
 	return f.flagSet.Parse(args)
+}
+
+func (f *Flag) addAlias(longName, shortName string) {
+	if len(shortName)>1 {
+		panic( f.flagName + " short name too long: " + shortName )
+	}
+	if len(shortName)==1 {
+		if len(f.AliasByShort(shortName)) >0 {
+			panic( f.flagName + " short flag redefined:" + shortName )
+		}
+		f.flagAliases = append( f.flagAliases, ALIAS{shortName: shortName, longName: longName} )
+	}
 }
 
 func (f *Flag) Bool(name string, value bool, usage string) *bool {
@@ -89,15 +111,7 @@ func (f *Flag) Duration(name string, value time.Duration, usage string) *time.Du
 }
 
 func (f *Flag) IntP(longName, shortName string, value int, usage string) *int {
-	if len(shortName)>1 {
-		panic( f.flagName + " short name too long: " + shortName )
-	}
-	if len(shortName)==1 {
-		if len(f.AliasByShort(shortName)) >0 {
-			panic( f.flagName + " short flag redefined:" + shortName )
-		}
-		f.flagAliases = append( f.flagAliases, ALIAS{shortName: shortName, longName: longName} )
-	}
+	if len(shortName)>=1 { f.addAlias(longName, shortName) }
 	return f.Int(longName,value,usage)
 }
 
