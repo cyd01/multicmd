@@ -60,6 +60,10 @@ func (f *Flags) SetUsage( fn func() ) {
 	f.flagSet.Usage = fn
 }
 
+func (f *Flags) Usage() {
+	f.flagSet.Usage()
+}
+
 func (f *Flags) defaultUsage() {
 	if f.flagName == "" {
 		fmt.Fprintf(f.flagSet.Output(), "Usage:\n")
