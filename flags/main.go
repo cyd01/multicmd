@@ -5,30 +5,30 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 )
 
-func forgevar( cmd, name string ) string {
-	return strings.ReplaceAll( strings.ToUpper(cmd+"_"+name), "-", "_" )
+func forgevar(cmd, name string) string {
+	return strings.ReplaceAll(strings.ToUpper(cmd+"_"+name), "-", "_")
 }
 
-type ALIAS struct{
-	shortName   string
-	longName    string
-} 
+type ALIAS struct {
+	shortName string
+	longName  string
+}
 
 type Flags struct {
-	flagName     string
-	flagSet      *flag.FlagSet
-	flagAliases  []ALIAS
+	flagName    string
+	flagSet     *flag.FlagSet
+	flagAliases []ALIAS
 }
 
-func NewFlag( name string ) (*Flags) {
-	f := &Flags {
+func NewFlag(name string) *Flags {
+	f := &Flags{
 		flagName: name,
-		flagSet: flag.NewFlagSet( name, flag.ContinueOnError),
+		flagSet:  flag.NewFlagSet(name, flag.ContinueOnError),
 	}
 	f.SetUsage(f.defaultUsage)
 	return f
@@ -36,14 +36,18 @@ func NewFlag( name string ) (*Flags) {
 
 func (f *Flags) AliasByShort(name string) string {
 	for _, val := range f.flagAliases {
-		if val.shortName == name { return val.longName }
+		if val.shortName == name {
+			return val.longName
+		}
 	}
 	return ""
 }
 
 func (f *Flags) AliasByLong(name string) string {
 	for _, val := range f.flagAliases {
-		if val.longName == name { return val.shortName }
+		if val.longName == name {
+			return val.shortName
+		}
 	}
 	return ""
 }
@@ -56,7 +60,7 @@ func (f *Flags) Args() []string {
 	return f.flagSet.Args()
 }
 
-func (f *Flags) SetUsage( fn func() ) {
+func (f *Flags) SetUsage(fn func()) {
 	f.flagSet.Usage = fn
 }
 
@@ -76,13 +80,19 @@ func (f *Flags) defaultUsage() {
 
 func (f *Flags) Parse(arguments []string) error {
 	args := arguments
-	if len(args)>0 {
-		for i:=0; i<len(args) ;i++ {
-			if strings.HasPrefix(args[i],"-") {
+	if len(args) > 0 {
+		for i := 0; i < len(args); i++ {
+			if strings.HasPrefix(args[i], "-") {
 				var v string
-				if strings.HasPrefix(args[i],"--") { v=args[i][2:] } else { v=args[i][1:] }
+				if strings.HasPrefix(args[i], "--") {
+					v = args[i][2:]
+				} else {
+					v = args[i][1:]
+				}
 				n := f.AliasByShort(v)
-				if len(n)>0 { args[i] = "-"+n }
+				if len(n) > 0 {
+					args[i] = "-" + n
+				}
 			}
 		}
 	}
@@ -90,14 +100,14 @@ func (f *Flags) Parse(arguments []string) error {
 }
 
 func (f *Flags) addAlias(longName, shortName string) {
-	if len(shortName)>1 {
-		panic( f.flagName + " short name too long: " + shortName )
+	if len(shortName) > 1 {
+		panic(f.flagName + " short name too long: " + shortName)
 	}
-	if len(shortName)==1 {
-		if len(f.AliasByShort(shortName)) >0 {
-			panic( f.flagName + " short flag redefined:" + shortName )
+	if len(shortName) == 1 {
+		if len(f.AliasByShort(shortName)) > 0 {
+			panic(f.flagName + " short flag redefined:" + shortName)
 		}
-		f.flagAliases = append( f.flagAliases, ALIAS{shortName: shortName, longName: longName} )
+		f.flagAliases = append(f.flagAliases, ALIAS{shortName: shortName, longName: longName})
 	}
 }
 
@@ -136,8 +146,8 @@ func (f *Flags) PrintDefaults() {
 	f.flagSet.VisitAll(func(fl *flag.Flag) {
 		var b strings.Builder
 		fmt.Fprintf(&b, "  -%s", fl.Name) // Two spaces before -; see next two comments.
-		if v:=f.AliasByLong(fl.Name);len(v)>0 {
-			fmt.Fprintf(&b, ", -%s",v)
+		if v := f.AliasByLong(fl.Name); len(v) > 0 {
+			fmt.Fprintf(&b, ", -%s", v)
 		}
 		name, usage := flag.UnquoteUsage(fl)
 		if len(name) > 0 {
@@ -167,73 +177,112 @@ func (f *Flags) PrintDefaults() {
 	})
 }
 
+func (f *Flags) BoolP(longName, shortName string, value bool, usage string) *bool {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Bool(longName, value, usage)
+}
+
 func (f *Flags) Bool(name string, value bool, usage string) *bool {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b {
-		if strings.EqualFold(v,"1") || strings.EqualFold(v,"true") { val = true
-		} else { val = false
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if strings.EqualFold(v, "1") || strings.EqualFold(v, "true") {
+			val = true
+		} else {
+			val = false
 		}
 	}
-	return f.flagSet.Bool(name,val,usage)
+	return f.flagSet.Bool(name, val, usage)
+}
+
+func (f *Flags) DurationP(longName, shortName string, value time.Duration, usage string) *time.Duration {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Duration(longName, value, usage)
 }
 
 func (f *Flags) Duration(name string, value time.Duration, usage string) *time.Duration {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := time.ParseDuration(v); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := time.ParseDuration(v); err == nil {
 			val = vv
 		}
 	}
-	return f.flagSet.Duration(name,val,usage)
+	return f.flagSet.Duration(name, val, usage)
 }
 
 func (f *Flags) IntP(longName, shortName string, value int, usage string) *int {
-	if len(shortName)>=1 { f.addAlias(longName, shortName) }
-	return f.Int(longName,value,usage)
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Int(longName, value, usage)
 }
 
 func (f *Flags) Int(name string, value int, usage string) *int {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := strconv.Atoi(v); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := strconv.Atoi(v); err == nil {
 			val = vv
 		}
 	}
-	return f.flagSet.Int(name,val,usage)
+	return f.flagSet.Int(name, val, usage)
+}
+
+func (f *Flags) Float64P(longName, shortName string, value float64, usage string) *float64 {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Float64(longName, value, usage)
 }
 
 func (f *Flags) Float64(name string, value float64, usage string) *float64 {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := strconv.ParseFloat(v, 64); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := strconv.ParseFloat(v, 64); err == nil {
 			val = vv
 		}
 	}
-	return f.flagSet.Float64(name,val,usage)
+	return f.flagSet.Float64(name, val, usage)
+}
+
+func (f *Flags) Int64P(longName, shortName string, value int64, usage string) *int64 {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Int64(longName, value, usage)
 }
 
 func (f *Flags) Int64(name string, value int64, usage string) *int64 {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := strconv.ParseInt(v, 10, 64); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := strconv.ParseInt(v, 10, 64); err == nil {
 			val = vv
 		}
 	}
-	return f.flagSet.Int64(name,val,usage)
+	return f.flagSet.Int64(name, val, usage)
+}
+
+func (f *Flags) StringP(longName, shortName string, value string, usage string) *string {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.String(longName, value, usage)
 }
 
 func (f *Flags) String(name string, value string, usage string) *string {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
 		val = v
 	}
-	return f.flagSet.String(name,val,usage)
+	return f.flagSet.String(name, val, usage)
 }
 
 func (f *Flags) NArg() int {
@@ -253,27 +302,41 @@ func (f *Flags) Parsed() bool {
 }
 
 func (f *Flags) Set(name, value string) error {
-	return f.flagSet.Set(name,value)
+	return f.flagSet.Set(name, value)
+}
+
+func (f *Flags) UintP(longName, shortName string, value uint, usage string) *uint {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Uint(longName, value, usage)
 }
 
 func (f *Flags) Uint(name string, value uint, usage string) *uint {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := strconv.ParseUint(v, 10, 64); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := strconv.ParseUint(v, 10, 64); err == nil {
 			val = uint(vv)
 		}
 	}
-	return f.flagSet.Uint(name,val,usage)
+	return f.flagSet.Uint(name, val, usage)
+}
+
+func (f *Flags) Uint64P(longName, shortName string, value uint64, usage string) *uint64 {
+	if len(shortName) >= 1 {
+		f.addAlias(longName, shortName)
+	}
+	return f.Uint64(longName, value, usage)
 }
 
 func (f *Flags) Uint64(name string, value uint64, usage string) *uint64 {
 	val := value
-	n := forgevar(f.flagName,name)
-	if v,b :=os.LookupEnv(n); b { 
-		if vv, err := strconv.ParseUint(v, 10, 64); err==nil {
+	n := forgevar(f.flagName, name)
+	if v, b := os.LookupEnv(n); b {
+		if vv, err := strconv.ParseUint(v, 10, 64); err == nil {
 			val = vv
 		}
 	}
-	return f.flagSet.Uint64(name,val,usage)
+	return f.flagSet.Uint64(name, val, usage)
 }
