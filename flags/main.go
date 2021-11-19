@@ -13,6 +13,9 @@ import (
 func forgevar(cmd, name string) string {
 	return strings.ReplaceAll(strings.ToUpper(cmd+"_"+name), "-", "_")
 }
+func formatname(name string) string {
+	return strings.ReplaceAll(name, "_", "-")
+}
 
 type ALIAS struct {
 	shortName string
@@ -179,7 +182,7 @@ func (f *Flags) PrintDefaults() {
 
 func (f *Flags) BoolP(longName, shortName string, value bool, usage string) *bool {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Bool(longName, value, usage)
 }
@@ -194,12 +197,12 @@ func (f *Flags) Bool(name string, value bool, usage string) *bool {
 			val = false
 		}
 	}
-	return f.flagSet.Bool(name, val, usage)
+	return f.flagSet.Bool(formatname(name), val, usage)
 }
 
 func (f *Flags) DurationP(longName, shortName string, value time.Duration, usage string) *time.Duration {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Duration(longName, value, usage)
 }
@@ -212,12 +215,12 @@ func (f *Flags) Duration(name string, value time.Duration, usage string) *time.D
 			val = vv
 		}
 	}
-	return f.flagSet.Duration(name, val, usage)
+	return f.flagSet.Duration(formatname(name), val, usage)
 }
 
 func (f *Flags) IntP(longName, shortName string, value int, usage string) *int {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Int(longName, value, usage)
 }
@@ -230,12 +233,12 @@ func (f *Flags) Int(name string, value int, usage string) *int {
 			val = vv
 		}
 	}
-	return f.flagSet.Int(name, val, usage)
+	return f.flagSet.Int(formatname(name), val, usage)
 }
 
 func (f *Flags) Float64P(longName, shortName string, value float64, usage string) *float64 {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Float64(longName, value, usage)
 }
@@ -248,12 +251,12 @@ func (f *Flags) Float64(name string, value float64, usage string) *float64 {
 			val = vv
 		}
 	}
-	return f.flagSet.Float64(name, val, usage)
+	return f.flagSet.Float64(formatname(name), val, usage)
 }
 
 func (f *Flags) Int64P(longName, shortName string, value int64, usage string) *int64 {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Int64(longName, value, usage)
 }
@@ -266,12 +269,12 @@ func (f *Flags) Int64(name string, value int64, usage string) *int64 {
 			val = vv
 		}
 	}
-	return f.flagSet.Int64(name, val, usage)
+	return f.flagSet.Int64(formatname(name), val, usage)
 }
 
 func (f *Flags) StringP(longName, shortName string, value string, usage string) *string {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.String(longName, value, usage)
 }
@@ -282,7 +285,7 @@ func (f *Flags) String(name string, value string, usage string) *string {
 	if v, b := os.LookupEnv(n); b {
 		val = v
 	}
-	return f.flagSet.String(name, val, usage)
+	return f.flagSet.String(formatname(name), val, usage)
 }
 
 func (f *Flags) NArg() int {
@@ -307,7 +310,7 @@ func (f *Flags) Set(name, value string) error {
 
 func (f *Flags) UintP(longName, shortName string, value uint, usage string) *uint {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Uint(longName, value, usage)
 }
@@ -320,12 +323,12 @@ func (f *Flags) Uint(name string, value uint, usage string) *uint {
 			val = uint(vv)
 		}
 	}
-	return f.flagSet.Uint(name, val, usage)
+	return f.flagSet.Uint(formatname(name), val, usage)
 }
 
 func (f *Flags) Uint64P(longName, shortName string, value uint64, usage string) *uint64 {
 	if len(shortName) >= 1 {
-		f.addAlias(longName, shortName)
+		f.addAlias(formatname(longName), shortName)
 	}
 	return f.Uint64(longName, value, usage)
 }
@@ -338,5 +341,5 @@ func (f *Flags) Uint64(name string, value uint64, usage string) *uint64 {
 			val = vv
 		}
 	}
-	return f.flagSet.Uint64(name, val, usage)
+	return f.flagSet.Uint64(formatname(name), val, usage)
 }
